@@ -1,6 +1,7 @@
 import plotly.express as px
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 
 if __name__ == "__main__":
