@@ -32,33 +32,39 @@ if __name__ == "__main__":
 
 ######################################################
 
+    "Bullet graph: https://plotly.com/python/bullet-charts/"
     
-
     df_student = pd.read_csv("PEC2/datasets/student-mat.csv", delimiter=';')
-    # Filtrar estudiantes donde G1 y G3 no sean cero
     filtered_students = df_student[(df_student['G1'] > 0) & (df_student['G3'] > 0)].dropna(subset=['G1', 'G2', 'G3'])
 
-    # Seleccionar 2 estudiantes al azar
-    random_students = filtered_students.sample(2, random_state=1)
+    # 4 estudiantes random
+    random_students = filtered_students.sample(4, random_state=1)
 
-    # Crear un objeto Figure
     fig = go.Figure()
 
     # Configurar la escala máxima basada en la escala de notas (0-20 convertida a 100)
     max_scale = 100
 
-    # Añadir un indicador para cada estudiante
+    # Calcular el número de estudiantes seleccionados
+    num_students = len(random_students)
+    height_per_student = 1 / (num_students + 1)  # Incrementar el espacio entre estudiantes
+
+    # Indicador por estudiante
     for i, (index, student) in enumerate(random_students.iterrows()):
         # Normalizar las notas al rango 0-100
         G1 = (student['G1'] / 20) * 100
         G2 = (student['G2'] / 20) * 100
         G3 = (student['G3'] / 20) * 100
 
-        # Añadir traza para cada estudiante
+        # Definir el dominio en el eje y para este indicador
+        y0 = i * height_per_student
+        y1 = y0 + height_per_student * 0.8  # Reducir la altura de cada indicador para mayor separación
+
+        # Traza por estudiante
         fig.add_trace(go.Indicator(
             mode="number+gauge+delta", value=G3,
             delta={'reference': G1},
-            domain={'x': [0.25, 1], 'y': [0.1 + i * 0.45, 0.35 + i * 0.45]},
+            domain={'x': [0.25, 1], 'y': [y0, y1]},
             title={'text': f"Student {index}"},
             gauge={
                 'shape': "bullet",
@@ -77,23 +83,29 @@ if __name__ == "__main__":
             }
         ))
 
-    # Configurar layout del gráfico
     fig.update_layout(
-        height=600,
-        margin={'t': 0, 'b': 0, 'l': 0},
-        paper_bgcolor='white',  # Fondo blanco
-        plot_bgcolor='white',   # Fondo blanco
-        showlegend=True,
-        legend_title_text='Componentes',
-        legend=dict(
-            yanchor="top",
-            y=0.95,
-            xanchor="right",
-            x=0.95
-        )
-    )
+    height=800,
+    margin={'t': 50, 'b': 20, 'l': 20, 'r': 20},
+    paper_bgcolor='white',
+    plot_bgcolor='white',
+    showlegend=True,
+    legend_title_text='Legend',
+    legend=dict(
+        yanchor="middle",
+        y=0.85,
+        xanchor="right",
+        x=1.05
+    ),
+    title={
+        'text': "Portuguese students performance on Maths over the academic course",
+        'y': 0.75,  # Posición vertical (más cerca del borde superior)
+        'x': 0.5,   # Centrado horizontalmente
+        'xanchor': 'center',
+        'yanchor': 'top',
+        'font': {'size': 24}  # Tamaño de la fuente
+    }
+)
 
-    # Añadir explicaciones en la leyenda
     fig.add_trace(go.Scatter(
         x=[None], y=[None], mode='markers',
         marker=dict(size=10, color="#00CC96"),
@@ -106,9 +118,8 @@ if __name__ == "__main__":
         legendgroup='G1', showlegend=True, name='Performance (first semester)'
     ))
 
-    # Eliminar ejes y grid
+
     fig.update_xaxes(showgrid=False, visible=False)
     fig.update_yaxes(showgrid=False, visible=False)
 
-    # Mostrar el gráfico
-    fig.show()
+    fig.write_html("pec2-viz/bulletgraph.html")
